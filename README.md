@@ -1,7 +1,7 @@
 # Настройка Проекта
 ## Клонируем репозиторий
 ```
-git clone <https://github.com/1KELER1/DDS>
+git clone https://github.com/1KELER1/DDS
 ```
 Переходим в папку проекта
 ```
