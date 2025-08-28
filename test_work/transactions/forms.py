@@ -8,7 +8,12 @@ class TransactionForm(forms.ModelForm):
         model = Transaction
         fields = ['date', 'status', 'transaction_type', 'category', 'subcategory', 'amount', 'comment']
         widgets = {
-            'date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'date': forms.DateInput(
+                attrs={
+                    'type': 'date',
+                    'class': 'form-control'
+                }
+            ),
             'status': forms.Select(attrs={'class': 'form-control'}),
             'transaction_type': forms.Select(attrs={'class': 'form-control'}),
             'category': forms.Select(attrs={'class': 'form-control'}),
@@ -19,27 +24,45 @@ class TransactionForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['date'].initial = timezone.now().date()
-        self.fields['category'].queryset = Category.objects.none()
-        self.fields['subcategory'].queryset = Subcategory.objects.none()
 
+        # Устанавливаем текущую дату по умолчанию для новых записей
+        if not self.instance.pk:
+            self.fields['date'].initial = timezone.now().date()
+
+        # Если это редактирование существующей записи
+        if self.instance.pk:
+            # Загружаем категории для выбранного типа операции
+            self.fields['category'].queryset = Category.objects.filter(
+                transaction_type=self.instance.transaction_type
+            )
+            # Загружаем подкатегории для выбранной категории
+            self.fields['subcategory'].queryset = Subcategory.objects.filter(
+                category=self.instance.category
+            )
+        else:
+            # Для новых записей показываем все доступные категории и подкатегории
+            self.fields['category'].queryset = Category.objects.all()
+            self.fields['subcategory'].queryset = Subcategory.objects.all()
+
+        # Обработка AJAX запросов при изменении типа операции
         if 'transaction_type' in self.data:
             try:
                 transaction_type_id = int(self.data.get('transaction_type'))
-                self.fields['category'].queryset = Category.objects.filter(transaction_type_id=transaction_type_id)
+                self.fields['category'].queryset = Category.objects.filter(
+                    transaction_type_id=transaction_type_id
+                ).order_by('name')
             except (ValueError, TypeError):
-                pass
-        elif self.instance.pk:
-            self.fields['category'].queryset = self.instance.transaction_type.categories.all()
+                self.fields['category'].queryset = Category.objects.none()
 
+        # Обработка AJAX запросов при изменении категории
         if 'category' in self.data:
             try:
                 category_id = int(self.data.get('category'))
-                self.fields['subcategory'].queryset = Subcategory.objects.filter(category_id=category_id)
+                self.fields['subcategory'].queryset = Subcategory.objects.filter(
+                    category_id=category_id
+                ).order_by('name')
             except (ValueError, TypeError):
-                pass
-        elif self.instance.pk:
-            self.fields['subcategory'].queryset = self.instance.category.subcategories.all()
+                self.fields['subcategory'].queryset = Subcategory.objects.none()
 
 
 class TransactionFilterForm(forms.Form):

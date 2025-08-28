@@ -3,94 +3,156 @@
 {% block title %}{{ title }} - Управление ДДС{% endblock %}
 
 {% block content %}
-<h1>{{ title }}</h1>
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h3>{{ title }}</h3>
+            </div>
+            <div class="card-body">
+                <form method="post" id="transaction-form">
+                    {% csrf_token %}
 
-<form method="post" class="row g-3">
-    {% csrf_token %}
-    
-    <div class="col-md-6">
-        <label class="form-label">Дата</label>
-        {{ form.date }}
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.date.id_for_label }}" class="form-label">Дата <span class="text-danger">*</span></label>
+                            {{ form.date }}
+                            {% if form.date.errors %}
+                                <div class="text-danger">{{ form.date.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.status.id_for_label }}" class="form-label">Статус <span class="text-danger">*</span></label>
+                            {{ form.status }}
+                            {% if form.status.errors %}
+                                <div class="text-danger">{{ form.status.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.transaction_type.id_for_label }}" class="form-label">Тип операции <span class="text-danger">*</span></label>
+                            {{ form.transaction_type }}
+                            {% if form.transaction_type.errors %}
+                                <div class="text-danger">{{ form.transaction_type.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.amount.id_for_label }}" class="form-label">Сумма (₽) <span class="text-danger">*</span></label>
+                            {{ form.amount }}
+                            {% if form.amount.errors %}
+                                <div class="text-danger">{{ form.amount.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.category.id_for_label }}" class="form-label">Категория <span class="text-danger">*</span></label>
+                            {{ form.category }}
+                            {% if form.category.errors %}
+                                <div class="text-danger">{{ form.category.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.subcategory.id_for_label }}" class="form-label">Подкатегория <span class="text-danger">*</span></label>
+                            {{ form.subcategory }}
+                            {% if form.subcategory.errors %}
+                                <div class="text-danger">{{ form.subcategory.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.comment.id_for_label }}" class="form-label">Комментарий</label>
+                        {{ form.comment }}
+                        {% if form.comment.errors %}
+                            <div class="text-danger">{{ form.comment.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'transaction_list' %}" class="btn btn-secondary me-md-2">Отмена</a>
+                        <button type="submit" class="btn btn-primary">Сохранить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-    
-    <div class="col-md-6">
-        <label class="form-label">Статус</label>
-        {{ form.status }}
-    </div>
-    
-    <div class="col-md-6">
-        <label class="form-label">Тип операции</label>
-        {{ form.transaction_type }}
-    </div>
-    
-    <div class="col-md-6">
-        <label class="form-label">Сумма (₽)</label>
-        {{ form.amount }}
-    </div>
-    
-    <div class="col-md-6">
-        <label class="form-label">Категория</label>
-        {{ form.category }}
-    </div>
-    
-    <div class="col-md-6">
-        <label class="form-label">Подкатегория</label>
-        {{ form.subcategory }}
-    </div>
-    
-    <div class="col-12">
-        <label class="form-label">Комментарий</label>
-        {{ form.comment }}
-    </div>
-    
-    <div class="col-12">
-        <button type="submit" class="btn btn-primary">Сохранить</button>
-        <a href="{% url 'transaction_list' %}" class="btn btn-secondary">Отмена</a>
-    </div>
-</form>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
 $(document).ready(function() {
+    console.log('JavaScript загружен');
+
+    // При изменении типа операции
     $("#id_transaction_type").change(function() {
-        var url = "{% url 'ajax_load_categories' %}";
         var transactionTypeId = $(this).val();
-        
-        $.ajax({
-            url: url,
-            data: {
-                'transaction_type': transactionTypeId
-            },
-            success: function(data) {
-                $("#id_category").html('<option value="">---------</option>');
-                $("#id_subcategory").html('<option value="">---------</option>');
-                
-                $.each(data, function(key, value) {
-                    $("#id_category").append('<option value="' + value.id + '">' + value.name + '</option>');
-                });
-            }
-        });
+        console.log('Выбран тип операции:', transactionTypeId);
+
+        if (transactionTypeId) {
+            $.ajax({
+                url: "{% url 'ajax_load_categories' %}",
+                data: {
+                    'transaction_type': transactionTypeId
+                },
+                success: function(data) {
+                    console.log('Получены категории:', data);
+                    $("#id_category").html('<option value="">Выберите категорию</option>');
+                    $("#id_subcategory").html('<option value="">Выберите подкатегорию</option>');
+
+                    $.each(data, function(key, value) {
+                        $("#id_category").append('<option value="' + value.id + '">' + value.name + '</option>');
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.error('Ошибка загрузки категорий:', error);
+                }
+            });
+        } else {
+            $("#id_category").html('<option value="">Выберите категорию</option>');
+            $("#id_subcategory").html('<option value="">Выберите подкатегорию</option>');
+        }
     });
 
+    // При изменении категории
     $("#id_category").change(function() {
-        var url = "{% url 'ajax_load_subcategories' %}";
         var categoryId = $(this).val();
-        
-        $.ajax({
-            url: url,
-            data: {
-                'category': categoryId
-            },
-            success: function(data) {
-                $("#id_subcategory").html('<option value="">---------</option>');
-                
-                $.each(data, function(key, value) {
-                    $("#id_subcategory").append('<option value="' + value.id + '">' + value.name + '</option>');
-                });
-            }
-        });
+        console.log('Выбрана категория:', categoryId);
+
+        if (categoryId) {
+            $.ajax({
+                url: "{% url 'ajax_load_subcategories' %}",
+                data: {
+                    'category': categoryId
+                },
+                success: function(data) {
+                    console.log('Получены подкатегории:', data);
+                    $("#id_subcategory").html('<option value="">Выберите подкатегорию</option>');
+
+                    $.each(data, function(key, value) {
+                        $("#id_subcategory").append('<option value="' + value.id + '">' + value.name + '</option>');
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.error('Ошибка загрузки подкатегорий:', error);
+                }
+            });
+        } else {
+            $("#id_subcategory").html('<option value="">Выберите подкатегорию</option>');
+        }
     });
+
+    // Если при загрузке страницы уже выбран тип операции
+    if ($("#id_transaction_type").val()) {
+        $("#id_transaction_type").trigger('change');
+    }
 });
 </script>
 {% endblock %}

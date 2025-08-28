@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator
 from decimal import Decimal
+from django.utils import timezone
 
 
 class Status(models.Model):
@@ -62,7 +63,8 @@ class Subcategory(models.Model):
 
 
 class Transaction(models.Model):
-    date = models.DateField(verbose_name="Дата")
+    # Дата автоматически заполняется текущей датой, но может быть изменена
+    date = models.DateField(default=timezone.now, verbose_name="Дата")
     status = models.ForeignKey(
         Status,
         on_delete=models.CASCADE,
