@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block title %}Список операций - Управление ДДС{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Движение денежных средств</h1>
+    <a href="{% url 'transaction_create' %}" class="btn btn-primary">Добавить операцию</a>
+</div>
+
+<!-- Фильтры -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5>Фильтры</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-2">
+                <label class="form-label">Дата с</label>
+                {{ filter_form.date_from }}
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Дата по</label>
+                {{ filter_form.date_to }}
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Статус</label>
+                {{ filter_form.status }}
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Тип</label>
+                {{ filter_form.transaction_type }}
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Категория</label>
+                {{ filter_form.category }}
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Подкатегория</label>
+                {{ filter_form.subcategory }}
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-secondary">Применить фильтр</button>
+                <a href="{% url 'transaction_list' %}" class="btn btn-outline-secondary">Сбросить</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Таблица операций -->
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Дата</th>
+                <th>Статус</th>
+                <th>Тип</th>
+                <th>Категория</th>
+                <th>Подкатегория</th>
+                <th>Сумма</th>
+                <th>Комментарий</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for transaction in page_obj %}
+            <tr>
+                <td>{{ transaction.date|date:"d.m.Y" }}</td>
+                <td>{{ transaction.status.name }}</td>
+                <td>
+                    <span class="badge bg-{% if transaction.transaction_type.name == 'Пополнение' %}success{% else %}danger{% endif %}">
+                        {{ transaction.transaction_type.name }}
+                    </span>
+                </td>
+                <td>{{ transaction.category.name }}</td>
+                <td>{{ transaction.subcategory.name }}</td>
+                <td>{{ transaction.amount|floatformat:2 }} ₽</td>
+                <td>{{ transaction.comment|truncatechars:50 }}</td>
+                <td>
+                    <a href="{% url 'transaction_edit' transaction.pk %}" class="btn btn-sm btn-outline-primary">Изменить</a>
+                    <a href="{% url 'transaction_delete' transaction.pk %}" class="btn btn-sm btn-outline-danger">Удалить</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" class="text-center">Операции не найдены</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Пагинация -->
+{% if page_obj.has_other_pages %}
+<nav>
+    <ul class="pagination">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Предыдущая</a>
+            </li>
+        {% endif %}
+        
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+            {% else %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+            {% endif %}
+        {% endfor %}
+        
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Следующая</a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

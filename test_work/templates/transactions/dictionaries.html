@@ -1,0 +1,349 @@
+{% extends 'base.html' %}
+
+{% block title %}Справочники - Управление ДДС{% endblock %}
+
+{% block content %}
+<h1>Управление справочниками</h1>
+
+<div class="row">
+    <!-- Статусы -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5>Статусы</h5>
+                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#statusModal">
+                    Добавить
+                </button>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    {% for status in statuses %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ status.name }}
+                        <div>
+                            <button class="btn btn-sm btn-outline-primary edit-status" data-id="{{ status.id }}" data-name="{{ status.name }}">
+                                Изменить
+                            </button>
+                            <form method="post" action="{% url 'delete_status' status.id %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Удалить статус?')">
+                                    Удалить
+                                </button>
+                            </form>
+                        </div>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item">Нет статусов</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Типы операций -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5>Типы операций</h5>
+                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#typeModal">
+                    Добавить
+                </button>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    {% for type in transaction_types %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ type.name }}
+                        <div>
+                            <button class="btn btn-sm btn-outline-primary edit-type" data-id="{{ type.id }}" data-name="{{ type.name }}">
+                                Изменить
+                            </button>
+                            <form method="post" action="{% url 'delete_transaction_type' type.id %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Удалить тип операции?')">
+                                    Удалить
+                                </button>
+                            </form>
+                        </div>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item">Нет типов операций</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Категории -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5>Категории</h5>
+                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#categoryModal">
+                    Добавить
+                </button>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    {% for category in categories %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ category.name }}</strong>
+                            <br>
+                            <small class="text-muted">{{ category.transaction_type.name }}</small>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-outline-primary edit-category" 
+                                    data-id="{{ category.id }}" 
+                                    data-name="{{ category.name }}" 
+                                    data-type="{{ category.transaction_type.id }}">
+                                Изменить
+                            </button>
+                            <form method="post" action="{% url 'delete_category' category.id %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Удалить категорию?')">
+                                    Удалить
+                                </button>
+                            </form>
+                        </div>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item">Нет категорий</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Подкатегории -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5>Подкатегории</h5>
+                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#subcategoryModal">
+                    Добавить
+                </button>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    {% for subcategory in subcategories %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ subcategory.name }}</strong>
+                            <br>
+                            <small class="text-muted">{{ subcategory.category.name }}</small>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-outline-primary edit-subcategory" 
+                                    data-id="{{ subcategory.id }}" 
+                                    data-name="{{ subcategory.name }}" 
+                                    data-category="{{ subcategory.category.id }}">
+                                Изменить
+                            </button>
+                            <form method="post" action="{% url 'delete_subcategory' subcategory.id %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Удалить подкатегорию?')">
+                                    Удалить
+                                </button>
+                            </form>
+                        </div>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item">Нет подкатегорий</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальные окна -->
+<!-- Статус -->
+<div class="modal fade" id="statusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Статус</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'add_status' %}">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <input type="hidden" id="status-id" name="id">
+                    <div class="mb-3">
+                        <label for="status-name" class="form-label">Название</label>
+                        <input type="text" class="form-control" id="status-name" name="name" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Тип операции -->
+<div class="modal fade" id="typeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Тип операции</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'add_transaction_type' %}">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <input type="hidden" id="type-id" name="id">
+                    <div class="mb-3">
+                        <label for="type-name" class="form-label">Название</label>
+                        <input type="text" class="form-control" id="type-name" name="name" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Категория -->
+<div class="modal fade" id="categoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Категория</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'add_category' %}">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <input type="hidden" id="category-id" name="id">
+                    <div class="mb-3">
+                        <label for="category-name" class="form-label">Название</label>
+                        <input type="text" class="form-control" id="category-name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="category-type" class="form-label">Тип операции</label>
+                        <select class="form-control" id="category-type" name="transaction_type" required>
+                            <option value="">Выберите тип операции</option>
+                            {% for type in transaction_types %}
+                            <option value="{{ type.id }}">{{ type.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Подкатегория -->
+<div class="modal fade" id="subcategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Подкатегория</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'add_subcategory' %}">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <input type="hidden" id="subcategory-id" name="id">
+                    <div class="mb-3">
+                        <label for="subcategory-name" class="form-label">Название</label>
+                        <input type="text" class="form-control" id="subcategory-name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="subcategory-category" class="form-label">Категория</label>
+                        <select class="form-control" id="subcategory-category" name="category" required>
+                            <option value="">Выберите категорию</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.name }} ({{ category.transaction_type.name }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Редактирование статуса
+$('.edit-status').click(function() {
+    $('#status-id').val($(this).data('id'));
+    $('#status-name').val($(this).data('name'));
+    $('#statusModal form').attr('action', '{% url "edit_status" 0 %}'.replace('0', $(this).data('id')));
+    $('#statusModal').modal('show');
+});
+
+// Редактирование типа операции
+$('.edit-type').click(function() {
+    $('#type-id').val($(this).data('id'));
+    $('#type-name').val($(this).data('name'));
+    $('#typeModal form').attr('action', '{% url "edit_transaction_type" 0 %}'.replace('0', $(this).data('id')));
+    $('#typeModal').modal('show');
+});
+
+// Редактирование категории
+$('.edit-category').click(function() {
+    $('#category-id').val($(this).data('id'));
+    $('#category-name').val($(this).data('name'));
+    $('#category-type').val($(this).data('type'));
+    $('#categoryModal form').attr('action', '{% url "edit_category" 0 %}'.replace('0', $(this).data('id')));
+    $('#categoryModal').modal('show');
+});
+
+// Редактирование подкатегории
+$('.edit-subcategory').click(function() {
+    $('#subcategory-id').val($(this).data('id'));
+    $('#subcategory-name').val($(this).data('name'));
+    $('#subcategory-category').val($(this).data('category'));
+    $('#subcategoryModal form').attr('action', '{% url "edit_subcategory" 0 %}'.replace('0', $(this).data('id')));
+    $('#subcategoryModal').modal('show');
+});
+
+// Очистка форм при открытии модальных окон для добавления
+$('#statusModal').on('hidden.bs.modal', function() {
+    $(this).find('form').attr('action', '{% url "add_status" %}');
+    $(this).find('input[type=text]').val('');
+    $(this).find('input[type=hidden]').val('');
+});
+
+$('#typeModal').on('hidden.bs.modal', function() {
+    $(this).find('form').attr('action', '{% url "add_transaction_type" %}');
+    $(this).find('input[type=text]').val('');
+    $(this).find('input[type=hidden]').val('');
+});
+
+$('#categoryModal').on('hidden.bs.modal', function() {
+    $(this).find('form').attr('action', '{% url "add_category" %}');
+    $(this).find('input[type=text]').val('');
+    $(this).find('select').val('');
+    $(this).find('input[type=hidden]').val('');
+});
+
+$('#subcategoryModal').on('hidden.bs.modal', function() {
+    $(this).find('form').attr('action', '{% url "add_subcategory" %}');
+    $(this).find('input[type=text]').val('');
+    $(this).find('select').val('');
+    $(this).find('input[type=hidden]').val('');
+});
+</script>
+{% endblock %}
