@@ -25,26 +25,28 @@ class TransactionForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Устанавливаем текущую дату по умолчанию для новых записей
+        # Для новых записей устанавливаем сегодняшнюю дату
         if not self.instance.pk:
-            self.fields['date'].initial = timezone.now().date()
+            today = timezone.now().date()
+            self.fields['date'].initial = today
+            self.fields['date'].widget.attrs['value'] = today.strftime('%Y-%m-%d')
 
-        # Если это редактирование существующей записи
-        if self.instance.pk:
-            # Загружаем категории для выбранного типа операции
+        # Настройка выпадающих списков
+        self.fields['status'].queryset = Status.objects.all()
+        self.fields['transaction_type'].queryset = TransactionType.objects.all()
+
+        if not self.instance.pk:
+            self.fields['category'].queryset = Category.objects.all().order_by('name')
+            self.fields['subcategory'].queryset = Subcategory.objects.all().order_by('name')
+        else:
             self.fields['category'].queryset = Category.objects.filter(
                 transaction_type=self.instance.transaction_type
-            )
-            # Загружаем подкатегории для выбранной категории
+            ).order_by('name')
             self.fields['subcategory'].queryset = Subcategory.objects.filter(
                 category=self.instance.category
-            )
-        else:
-            # Для новых записей показываем все доступные категории и подкатегории
-            self.fields['category'].queryset = Category.objects.all()
-            self.fields['subcategory'].queryset = Subcategory.objects.all()
+            ).order_by('name')
 
-        # Обработка AJAX запросов при изменении типа операции
+        # AJAX обработка
         if 'transaction_type' in self.data:
             try:
                 transaction_type_id = int(self.data.get('transaction_type'))
@@ -52,9 +54,8 @@ class TransactionForm(forms.ModelForm):
                     transaction_type_id=transaction_type_id
                 ).order_by('name')
             except (ValueError, TypeError):
-                self.fields['category'].queryset = Category.objects.none()
+                pass
 
-        # Обработка AJAX запросов при изменении категории
         if 'category' in self.data:
             try:
                 category_id = int(self.data.get('category'))
@@ -62,39 +63,52 @@ class TransactionForm(forms.ModelForm):
                     category_id=category_id
                 ).order_by('name')
             except (ValueError, TypeError):
-                self.fields['subcategory'].queryset = Subcategory.objects.none()
+                pass
+
+    def clean_date(self):
+        """Если дата не указана, используем сегодняшнюю"""
+        date = self.cleaned_data.get('date')
+        if not date:
+            date = timezone.now().date()
+        return date
 
 
 class TransactionFilterForm(forms.Form):
     date_from = forms.DateField(
         required=False,
-        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        label='Дата с'
     )
     date_to = forms.DateField(
         required=False,
-        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        label='Дата по'
     )
     status = forms.ModelChoiceField(
         queryset=Status.objects.all(),
         required=False,
         empty_label="Все статусы",
-        widget=forms.Select(attrs={'class': 'form-control'})
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label='Статус'
     )
     transaction_type = forms.ModelChoiceField(
         queryset=TransactionType.objects.all(),
         required=False,
         empty_label="Все типы",
-        widget=forms.Select(attrs={'class': 'form-control'})
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label='Тип операции'
     )
     category = forms.ModelChoiceField(
         queryset=Category.objects.all(),
         required=False,
         empty_label="Все категории",
-        widget=forms.Select(attrs={'class': 'form-control'})
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label='Категория'
     )
     subcategory = forms.ModelChoiceField(
         queryset=Subcategory.objects.all(),
         required=False,
         empty_label="Все подкатегории",
-        widget=forms.Select(attrs={'class': 'form-control'})
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label='Подкатегория'
     )

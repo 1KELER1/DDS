@@ -16,6 +16,7 @@ class Status(models.Model):
 
 
 class TransactionType(models.Model):
+
     name = models.CharField(max_length=100, unique=True, verbose_name="Тип операции")
 
     class Meta:
@@ -64,7 +65,8 @@ class Subcategory(models.Model):
 
 class Transaction(models.Model):
     # Дата автоматически заполняется текущей датой, но может быть изменена
-    date = models.DateField(default=timezone.now, verbose_name="Дата")
+    date = models.DateField(verbose_name="Дата")
+
     status = models.ForeignKey(
         Status,
         on_delete=models.CASCADE,

@@ -43,8 +43,20 @@ def transaction_list(request):
 def transaction_create(request):
     if request.method == 'POST':
         form = TransactionForm(request.POST)
+
+        # Если дата не передана в POST, добавляем сегодняшнюю дату
+        data = request.POST.copy()
+        if not data.get('date'):
+            data['date'] = timezone.now().date().strftime('%Y-%m-%d')
+
+        form = TransactionForm(data)
+
         if form.is_valid():
-            form.save()
+            transaction = form.save(commit=False)
+            # Убеждаемся, что дата установлена
+            if not transaction.date:
+                transaction.date = timezone.now().date()
+            transaction.save()
             messages.success(request, 'Запись успешно создана!')
             return redirect('transaction_list')
     else:

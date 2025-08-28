@@ -1,3 +1,6 @@
+
+
+
 {% extends 'base.html' %}
 
 {% block title %}{{ title }} - Управление ДДС{% endblock %}
@@ -15,7 +18,10 @@
 
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label for="{{ form.date.id_for_label }}" class="form-label">Дата <span class="text-danger">*</span></label>
+                            <label for="{{ form.date.id_for_label }}" class="form-label">
+                                Дата <span class="text-danger">*</span>
+                                <small class="text-muted">(автоматически устанавливается сегодняшняя дата)</small>
+                            </label>
                             {{ form.date }}
                             {% if form.date.errors %}
                                 <div class="text-danger">{{ form.date.errors }}</div>
@@ -89,12 +95,23 @@
 {% block scripts %}
 <script>
 $(document).ready(function() {
-    console.log('JavaScript загружен');
+    // Устанавливаем сегодняшнюю дату если поле пустое
+    if (!$("#id_date").val()) {
+        var today = new Date().toISOString().split('T')[0];
+        $("#id_date").val(today);
+    }
+
+    // При отправке формы убеждаемся, что дата установлена
+    $("#transaction-form").submit(function(e) {
+        if (!$("#id_date").val()) {
+            var today = new Date().toISOString().split('T')[0];
+            $("#id_date").val(today);
+        }
+    });
 
     // При изменении типа операции
     $("#id_transaction_type").change(function() {
         var transactionTypeId = $(this).val();
-        console.log('Выбран тип операции:', transactionTypeId);
 
         if (transactionTypeId) {
             $.ajax({
@@ -103,16 +120,12 @@ $(document).ready(function() {
                     'transaction_type': transactionTypeId
                 },
                 success: function(data) {
-                    console.log('Получены категории:', data);
                     $("#id_category").html('<option value="">Выберите категорию</option>');
                     $("#id_subcategory").html('<option value="">Выберите подкатегорию</option>');
 
                     $.each(data, function(key, value) {
                         $("#id_category").append('<option value="' + value.id + '">' + value.name + '</option>');
                     });
-                },
-                error: function(xhr, status, error) {
-                    console.error('Ошибка загрузки категорий:', error);
                 }
             });
         } else {
@@ -124,7 +137,6 @@ $(document).ready(function() {
     // При изменении категории
     $("#id_category").change(function() {
         var categoryId = $(this).val();
-        console.log('Выбрана категория:', categoryId);
 
         if (categoryId) {
             $.ajax({
@@ -133,15 +145,11 @@ $(document).ready(function() {
                     'category': categoryId
                 },
                 success: function(data) {
-                    console.log('Получены подкатегории:', data);
                     $("#id_subcategory").html('<option value="">Выберите подкатегорию</option>');
 
                     $.each(data, function(key, value) {
                         $("#id_subcategory").append('<option value="' + value.id + '">' + value.name + '</option>');
                     });
-                },
-                error: function(xhr, status, error) {
-                    console.error('Ошибка загрузки подкатегорий:', error);
                 }
             });
         } else {
@@ -149,10 +157,11 @@ $(document).ready(function() {
         }
     });
 
-    // Если при загрузке страницы уже выбран тип операции
+    // Автоматически загружаем категории если тип операции уже выбран
     if ($("#id_transaction_type").val()) {
         $("#id_transaction_type").trigger('change');
     }
 });
 </script>
 {% endblock %}
+
