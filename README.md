@@ -7,6 +7,11 @@ git clone https://github.com/1KELER1/DDS
 ```
 cd DDS
 ```
+
+Переходим в корневую проекта
+```
+cd test_work
+```
 ## Создание виртуального окружения
 ```
 python -m venv venv
